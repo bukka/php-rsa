@@ -27,21 +27,16 @@
 #include "php_rsa.h"
 
 #include <openssl/evp.h>
+#include <openssl/rsa.h>
 
 ZEND_DECLARE_MODULE_GLOBALS(rsa)
-
-/* {{{ rsa_functions[] */
-static const zend_function_entry rsa_functions[] = {
-	PHP_FE_END
-};
-/* }}} */
 
 /* {{{ rsa_module_entry
  */
 zend_module_entry rsa_module_entry = {
 	STANDARD_MODULE_HEADER,
 	"rsa",
-	rsa_functions,
+	NULL,
 	PHP_MINIT(rsa),
 	PHP_MSHUTDOWN(rsa),
 	NULL,
@@ -56,9 +51,74 @@ zend_module_entry rsa_module_entry = {
 };
 /* }}} */
 
-#ifdef COMPILE_DL_CRYPTO
+#ifdef COMPILE_DL_RSA
 ZEND_GET_MODULE(rsa)
 #endif
+
+PHPC_OBJ_STRUCT_BEGIN(rsa)
+	RSA *ctx;
+PHPC_OBJ_STRUCT_END()
+
+PHP_METHOD(RSA, __construct);
+
+static const zend_function_entry php_rsa_object_methods[] = {
+	PHP_ME(RSA, __construct, NULL, ZEND_ACC_CTOR|ZEND_ACC_PUBLIC)
+	PHPC_FE_END
+};
+
+/* class entry */
+PHP_RSA_API zend_class_entry *php_rsa_ce;
+
+/* object handler */
+PHPC_OBJ_DEFINE_HANDLER_VAR(rsa);
+
+/* {{{ rsa free object handler */
+PHPC_OBJ_HANDLER_FREE(rsa)
+{
+	PHPC_OBJ_STRUCT_DECLARE_AND_FETCH_FROM_ZOBJ(rsa, intern);
+	RSA_free(intern->ctx);
+	PHPC_OBJ_HANDLER_FREE_DTOR(intern);
+}
+/* }}} */
+
+/* {{{ rsa create_ex object helper */
+PHPC_OBJ_HANDLER_CREATE_EX(rsa)
+{
+	PHPC_OBJ_HANDLER_CREATE_EX_INIT();
+	PHPC_OBJ_STRUCT_DECLARE(rsa, intern);
+
+	intern = PHPC_OBJ_HANDLER_CREATE_EX_ALLOC(rsa);
+	PHPC_OBJ_HANDLER_INIT_CREATE_EX_PROPS(intern);
+
+	/* allocate encode context */
+	intern->ctx = RSA_new();
+
+	PHPC_OBJ_HANDLER_CREATE_EX_RETURN(rsa, intern);
+}
+/* }}} */
+
+/* {{{ rsa create object handler */
+PHPC_OBJ_HANDLER_CREATE(rsa)
+{
+	PHPC_OBJ_HANDLER_CREATE_RETURN(rsa);
+}
+/* }}} */
+
+/* {{{ rsa clone object handler */
+PHPC_OBJ_HANDLER_CLONE(rsa)
+{
+	PHPC_OBJ_HANDLER_CLONE_INIT();
+	PHPC_OBJ_STRUCT_DECLARE(rsa, old_obj);
+	PHPC_OBJ_STRUCT_DECLARE(rsa, new_obj);
+
+	old_obj = PHPC_OBJ_FROM_SELF(rsa);
+	PHPC_OBJ_HANDLER_CLONE_MEMBERS(rsa, new_obj, old_obj);
+
+	memcpy(new_obj->ctx, old_obj->ctx, sizeof (RSA));
+
+	PHPC_OBJ_HANDLER_CLONE_RETURN(new_obj);
+}
+/* }}} */
 
 /* {{{ PHP_MINIT_FUNCTION
  */
@@ -68,6 +128,15 @@ PHP_MINIT_FUNCTION(rsa)
 	
 	/* Init OpenSSL algorithms */
 	OpenSSL_add_all_algorithms();
+
+	/* RSA class */
+	INIT_CLASS_ENTRY(ce, "RSA", php_rsa_object_methods);
+	PHPC_CLASS_SET_HANDLER_CREATE(ce, rsa);
+	php_rsa_ce = PHPC_CLASS_REGISTER(ce);
+	PHPC_OBJ_INIT_HANDLERS(rsa);
+	PHPC_OBJ_SET_HANDLER_OFFSET(rsa);
+	PHPC_OBJ_SET_HANDLER_FREE(rsa);
+	PHPC_OBJ_SET_HANDLER_CLONE(rsa);
 
 	return SUCCESS;
 }
@@ -103,6 +172,10 @@ PHP_MINFO_FUNCTION(rsa)
 }
 /* }}} */
 
+/* {{{ proto string RSA::__Construct() */
+PHP_METHOD(RSA, __construct)
+{
+}
 
 /*
  * Local variables:
