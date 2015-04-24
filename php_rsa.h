@@ -37,6 +37,10 @@ extern zend_module_entry rsa_module_entry;
 /* Crypto version */
 #define PHP_RSA_VERSION "0.1.0"
 
+/* PHP Compatibility layer */
+#include "phpc/phpc.h"
+
+
 /* GLOBALS */
 
 ZEND_BEGIN_MODULE_GLOBALS(rsa)
