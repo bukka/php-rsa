@@ -1,0 +1,15 @@
+// $Id$
+// vim:ft=javascript
+
+ARG_WITH("rsa", "RSA support", "no");
+
+if (PHP_RSA != "no") {
+	if (ADD_EXTENSION_DEP('RSA', 'OPENSSL')
+			&& CHECK_LIB("libeay32.lib", "rsa", PHP_RSA)) {
+		AC_DEFINE("HAVE_RSALIB",1,"[Whether you want rsa binding]");
+		EXTENSION("rsa", "rsa.c");
+	} else {
+		WARNING("rsa support can't be enabled, openssl is not enabled");
+		PHP_RSA = "no";
+	}
+}
