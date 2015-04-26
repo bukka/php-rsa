@@ -42,7 +42,6 @@ extern zend_module_entry rsa_module_entry;
 
 
 /* GLOBALS */
-
 ZEND_BEGIN_MODULE_GLOBALS(rsa)
 ZEND_END_MODULE_GLOBALS(rsa)
 
@@ -60,6 +59,9 @@ PHP_GINIT_FUNCTION(rsa);
 PHP_MSHUTDOWN_FUNCTION(rsa);
 PHP_MINFO_FUNCTION(rsa);
 
+/* methods */
+PHP_METHOD(RSA, __construct);
+PHP_METHOD(RSA, setN);
 
 #endif	/* PHP_RSA_H */
 

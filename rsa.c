@@ -55,14 +55,24 @@ zend_module_entry rsa_module_entry = {
 ZEND_GET_MODULE(rsa)
 #endif
 
+typedef enum {
+	PHP_RSA_ENC_HEX,
+	PHP_RSA_ENC_DEC
+} php_rsa_encoding;
+
 PHPC_OBJ_STRUCT_BEGIN(rsa)
 	RSA *ctx;
 PHPC_OBJ_STRUCT_END()
 
-PHP_METHOD(RSA, __construct);
+ZEND_BEGIN_ARG_INFO_EX(arginfo_rsa_set_value, 0, 0, 1)
+ZEND_ARG_INFO(0, value)
+ZEND_ARG_INFO(0, encoding)
+ZEND_END_ARG_INFO()
+
 
 static const zend_function_entry php_rsa_object_methods[] = {
-	PHP_ME(RSA, __construct, NULL, ZEND_ACC_CTOR|ZEND_ACC_PUBLIC)
+	PHP_ME(RSA, __construct,    NULL,                       ZEND_ACC_CTOR|ZEND_ACC_PUBLIC)
+	PHP_ME(RSA, setN,           arginfo_rsa_set_value,      ZEND_ACC_PUBLIC)
 	PHPC_FE_END
 };
 
@@ -125,7 +135,7 @@ PHPC_OBJ_HANDLER_CLONE(rsa)
 PHP_MINIT_FUNCTION(rsa)
 {
 	zend_class_entry ce;
-	
+
 	/* Init OpenSSL algorithms */
 	OpenSSL_add_all_algorithms();
 
@@ -154,7 +164,7 @@ PHP_GINIT_FUNCTION(rsa)
 PHP_MSHUTDOWN_FUNCTION(rsa)
 {
 	EVP_cleanup();
-	
+
 	return SUCCESS;
 }
 /* }}} */
@@ -172,9 +182,61 @@ PHP_MINFO_FUNCTION(rsa)
 }
 /* }}} */
 
-/* {{{ proto string RSA::__Construct() */
+/* {{{ */
+static int php_rsa_set_value(BIGNUM **bnval, const char *sval, php_rsa_encoding encoding)
+{
+	int rc;
+
+	switch (encoding) {
+		case PHP_RSA_ENC_DEC:
+			rc = BN_dec2bn(bnval, sval);
+			break;
+
+		default:
+			rc = BN_hex2bn(bnval, sval);
+	}
+
+	return rc != 0 ? SUCCESS : FAILURE;
+}
+/* }}} */
+
+/* {{{ */
+static php_rsa_encoding php_rsa_long_to_encoding(phpc_long_t encoding_value)
+{
+	if (encoding_value == PHP_RSA_ENC_DEC) {
+		return PHP_RSA_ENC_DEC;
+	} else {
+		return PHP_RSA_ENC_HEX;
+	}
+}
+/* }}} */
+
+/* {{{ */
+static void php_rsa_set_value_method(INTERNAL_FUNCTION_PARAMETERS, BIGNUM **bnval)
+{
+	char *sval;
+	phpc_str_size_t sval_len;
+	phpc_long_t encoding_value = PHP_RSA_ENC_HEX;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|l", &sval, &sval_len, &encoding_value) == FAILURE) {
+		return;
+	}
+
+	RETURN_BOOL(php_rsa_set_value(bnval, sval, php_rsa_long_to_encoding(encoding_value)) == SUCCESS);
+}
+/* }}} */
+
+/* {{{ proto void RSA::__Construct() */
 PHP_METHOD(RSA, __construct)
 {
+}
+/* }}} */
+
+/* {{{ proto void RSA::setN($value, $format = RSA_ENC_HEX) */
+PHP_METHOD(RSA, setN)
+{
+	PHPC_THIS_DECLARE_AND_FETCH(rsa);
+	php_rsa_set_value_method(INTERNAL_FUNCTION_PARAM_PASSTHRU, &PHPC_THIS->ctx->n);
 }
 
 /*
