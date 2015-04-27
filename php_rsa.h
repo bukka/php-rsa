@@ -62,6 +62,10 @@ PHP_MINFO_FUNCTION(rsa);
 /* methods */
 PHP_METHOD(RSA, __construct);
 PHP_METHOD(RSA, setN);
+PHP_METHOD(RSA, setE);
+PHP_METHOD(RSA, setD);
+PHP_METHOD(RSA, setP);
+PHP_METHOD(RSA, setQ);
 
 #endif	/* PHP_RSA_H */
 

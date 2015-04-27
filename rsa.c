@@ -73,6 +73,10 @@ ZEND_END_ARG_INFO()
 static const zend_function_entry php_rsa_object_methods[] = {
 	PHP_ME(RSA, __construct,    NULL,                       ZEND_ACC_CTOR|ZEND_ACC_PUBLIC)
 	PHP_ME(RSA, setN,           arginfo_rsa_set_value,      ZEND_ACC_PUBLIC)
+	PHP_ME(RSA, setE,           arginfo_rsa_set_value,      ZEND_ACC_PUBLIC)
+	PHP_ME(RSA, setD,           arginfo_rsa_set_value,      ZEND_ACC_PUBLIC)
+	PHP_ME(RSA, setP,           arginfo_rsa_set_value,      ZEND_ACC_PUBLIC)
+	PHP_ME(RSA, setQ,           arginfo_rsa_set_value,      ZEND_ACC_PUBLIC)
 	PHPC_FE_END
 };
 
@@ -232,11 +236,38 @@ PHP_METHOD(RSA, __construct)
 }
 /* }}} */
 
+#define PHP_RSA_METHOD_VALUE_SETTER(name) \
+	PHPC_THIS_DECLARE_AND_FETCH(rsa); \
+	php_rsa_set_value_method(INTERNAL_FUNCTION_PARAM_PASSTHRU, &PHPC_THIS->ctx->name);
+
 /* {{{ proto void RSA::setN($value, $format = RSA_ENC_HEX) */
 PHP_METHOD(RSA, setN)
 {
-	PHPC_THIS_DECLARE_AND_FETCH(rsa);
-	php_rsa_set_value_method(INTERNAL_FUNCTION_PARAM_PASSTHRU, &PHPC_THIS->ctx->n);
+	PHP_RSA_METHOD_VALUE_SETTER(n);
+}
+
+/* {{{ proto void RSA::setE($value, $format = RSA_ENC_HEX) */
+PHP_METHOD(RSA, setE)
+{
+	PHP_RSA_METHOD_VALUE_SETTER(e);
+}
+
+/* {{{ proto void RSA::setD($value, $format = RSA_ENC_HEX) */
+PHP_METHOD(RSA, setD)
+{
+	PHP_RSA_METHOD_VALUE_SETTER(d);
+}
+
+/* {{{ proto void RSA::setP($value, $format = RSA_ENC_HEX) */
+PHP_METHOD(RSA, setP)
+{
+	PHP_RSA_METHOD_VALUE_SETTER(p);
+}
+
+/* {{{ proto void RSA::setQ($value, $format = RSA_ENC_HEX) */
+PHP_METHOD(RSA, setQ)
+{
+	PHP_RSA_METHOD_VALUE_SETTER(q);
 }
 
 /*
