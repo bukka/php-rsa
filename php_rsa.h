@@ -40,9 +40,15 @@ extern zend_module_entry rsa_module_entry;
 /* PHP Compatibility layer */
 #include "phpc/phpc.h"
 
+/* RSA param encoding */
+typedef enum {
+	PHP_RSA_ENC_HEX,
+	PHP_RSA_ENC_DEC
+} php_rsa_encoding;
 
 /* GLOBALS */
 ZEND_BEGIN_MODULE_GLOBALS(rsa)
+	php_rsa_encoding encoding;
 ZEND_END_MODULE_GLOBALS(rsa)
 
 #ifdef ZTS
@@ -61,6 +67,8 @@ PHP_MINFO_FUNCTION(rsa);
 
 /* methods */
 PHP_METHOD(RSA, __construct);
+PHP_METHOD(RSA, setEncoding);
+PHP_METHOD(RSA, getEncoding);
 PHP_METHOD(RSA, setN);
 PHP_METHOD(RSA, setE);
 PHP_METHOD(RSA, setD);

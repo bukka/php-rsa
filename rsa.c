@@ -55,14 +55,13 @@ zend_module_entry rsa_module_entry = {
 ZEND_GET_MODULE(rsa)
 #endif
 
-typedef enum {
-	PHP_RSA_ENC_HEX,
-	PHP_RSA_ENC_DEC
-} php_rsa_encoding;
-
 PHPC_OBJ_STRUCT_BEGIN(rsa)
 	RSA *ctx;
 PHPC_OBJ_STRUCT_END()
+
+ZEND_BEGIN_ARG_INFO(arginfo_rsa_set_encoding, 0)
+ZEND_ARG_INFO(0, encoding)
+ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_rsa_set_value, 0, 0, 1)
 ZEND_ARG_INFO(0, value)
@@ -72,6 +71,8 @@ ZEND_END_ARG_INFO()
 
 static const zend_function_entry php_rsa_object_methods[] = {
 	PHP_ME(RSA, __construct,    NULL,                       ZEND_ACC_CTOR|ZEND_ACC_PUBLIC)
+	PHP_ME(RSA, setEncoding,    arginfo_rsa_set_encoding,   ZEND_ACC_PUBLIC)
+	PHP_ME(RSA, getEncoding,    NULL,                       ZEND_ACC_PUBLIC)
 	PHP_ME(RSA, setN,           arginfo_rsa_set_value,      ZEND_ACC_PUBLIC)
 	PHP_ME(RSA, setE,           arginfo_rsa_set_value,      ZEND_ACC_PUBLIC)
 	PHP_ME(RSA, setD,           arginfo_rsa_set_value,      ZEND_ACC_PUBLIC)
@@ -143,6 +144,10 @@ PHP_MINIT_FUNCTION(rsa)
 	/* Init OpenSSL algorithms */
 	OpenSSL_add_all_algorithms();
 
+	/* Register encoding constants */
+	REGISTER_LONG_CONSTANT("RSA_ENC_HEX", PHP_RSA_ENC_HEX, CONST_CS | CONST_PERSISTENT);
+	REGISTER_LONG_CONSTANT("RSA_ENC_DEC", PHP_RSA_ENC_DEC, CONST_CS | CONST_PERSISTENT);
+
 	/* RSA class */
 	INIT_CLASS_ENTRY(ce, "RSA", php_rsa_object_methods);
 	PHPC_CLASS_SET_HANDLER_CREATE(ce, rsa);
@@ -160,6 +165,7 @@ PHP_MINIT_FUNCTION(rsa)
 */
 PHP_GINIT_FUNCTION(rsa)
 {
+	rsa_globals->encoding = PHP_RSA_ENC_HEX;
 }
 /* }}} */
 
@@ -233,6 +239,30 @@ static void php_rsa_set_value_method(INTERNAL_FUNCTION_PARAMETERS, BIGNUM **bnva
 /* {{{ proto void RSA::__Construct() */
 PHP_METHOD(RSA, __construct)
 {
+}
+/* }}} */
+
+/* {{{ proto void RSA::setEncoding() */
+PHP_METHOD(RSA, setEncoding)
+{
+	phpc_long_t encoding_value;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &encoding_value) == FAILURE) {
+		return;
+	}
+
+	PHP_RSA_G(encoding) = php_rsa_long_to_encoding(encoding_value);
+}
+/* }}} */
+
+/* {{{ proto int RSA::getEncoding() */
+PHP_METHOD(RSA, getEncoding)
+{
+	if (zend_parse_parameters_none()  == FAILURE) {
+		return;
+	}
+
+	RETURN_LONG((phpc_long_t) PHP_RSA_G(encoding));
 }
 /* }}} */
 
