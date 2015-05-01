@@ -81,8 +81,14 @@ static const zend_function_entry php_rsa_object_methods[] = {
 	PHPC_FE_END
 };
 
-/* class entry */
-PHP_RSA_API zend_class_entry *php_rsa_ce;
+typedef enum {
+	PHP_RSA_ERROR_INVALID_HEX_ENC,
+	PHP_RSA_ERROR_INVALID_DEC_ENC
+} php_rsa_error_code;
+
+/* class entries */
+static zend_class_entry *php_rsa_ce;
+static zend_class_entry *php_rsa_exception_ce;
 
 /* object handler */
 PHPC_OBJ_DEFINE_HANDLER_VAR(rsa);
@@ -157,6 +163,19 @@ PHP_MINIT_FUNCTION(rsa)
 	PHPC_OBJ_SET_HANDLER_FREE(rsa);
 	PHPC_OBJ_SET_HANDLER_CLONE(rsa);
 
+	/* RSAException class */
+	INIT_CLASS_ENTRY(ce, "RSAException", NULL);
+	php_rsa_exception_ce = PHPC_CLASS_REGISTER_EX(ce,
+			zend_exception_get_default(TSRMLS_C), NULL);
+
+	/* Register RSAException error constant */
+	zend_declare_class_constant_long(php_rsa_exception_ce,
+			"INVALID_HEX_ENCODING", sizeof("INVALID_HEX_ENCODING") - 1,
+			PHP_RSA_ERROR_INVALID_HEX_ENC TSRMLS_CC);
+	zend_declare_class_constant_long(php_rsa_exception_ce,
+			"INVALID_DEC_ENCODING", sizeof("INVALID_DEC_ENCODING") - 1,
+			PHP_RSA_ERROR_INVALID_DEC_ENC TSRMLS_CC);
+
 	return SUCCESS;
 }
 /* }}} */
@@ -193,9 +212,45 @@ PHP_MINFO_FUNCTION(rsa)
 /* }}} */
 
 /* {{{ */
-static int php_rsa_set_value(BIGNUM **bnval, const char *sval, php_rsa_encoding encoding)
+static int php_rsa_check_encoding(const char *sval, phpc_str_size_t sval_len,
+		php_rsa_encoding encoding TSRMLS_DC)
+{
+	phpc_str_size_t pos;
+	char c;
+
+	for (pos = 0; pos < sval_len; pos++) {
+		c = sval[pos];
+		if ((c >= '0') && (c <= '9')) {
+			continue;
+		}
+		if (encoding == PHP_RSA_ENC_DEC) {
+			zend_throw_exception(php_rsa_exception_ce,
+					"The string contains a non-decimal character",
+					PHP_RSA_ERROR_INVALID_DEC_ENC TSRMLS_CC);
+			return FAILURE;
+		}
+
+		if (!((c >= 'a') && (c <= 'f')) && !((c >= 'A') && (c <= 'F'))) {
+			zend_throw_exception(php_rsa_exception_ce,
+					"The string contains a non-hexadecimal character",
+					PHP_RSA_ERROR_INVALID_HEX_ENC TSRMLS_CC);
+			return FAILURE;
+		}
+	}
+
+	return SUCCESS;
+}
+/* }}} */
+
+/* {{{ */
+static int php_rsa_set_value(BIGNUM **bnval, const char *sval, phpc_str_size_t sval_len,
+		php_rsa_encoding encoding TSRMLS_DC)
 {
 	int rc;
+
+	if (php_rsa_check_encoding(sval, sval_len, encoding TSRMLS_CC) == FAILURE) {
+		return FAILURE;
+	}
 
 	switch (encoding) {
 		case PHP_RSA_ENC_DEC:
@@ -228,11 +283,15 @@ static void php_rsa_set_value_method(INTERNAL_FUNCTION_PARAMETERS, BIGNUM **bnva
 	phpc_str_size_t sval_len;
 	phpc_long_t encoding_value = PHP_RSA_ENC_HEX;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|l", &sval, &sval_len, &encoding_value) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|l",
+			&sval, &sval_len, &encoding_value) == FAILURE) {
 		return;
 	}
 
-	RETURN_BOOL(php_rsa_set_value(bnval, sval, php_rsa_long_to_encoding(encoding_value)) == SUCCESS);
+	php_rsa_set_value(bnval, sval, sval_len,
+			php_rsa_long_to_encoding(encoding_value) TSRMLS_CC);
+
+	RETURN_NULL();
 }
 /* }}} */
 
@@ -247,7 +306,8 @@ PHP_METHOD(RSA, setEncoding)
 {
 	phpc_long_t encoding_value;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &encoding_value) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l",
+			&encoding_value) == FAILURE) {
 		return;
 	}
 
@@ -275,30 +335,35 @@ PHP_METHOD(RSA, setN)
 {
 	PHP_RSA_METHOD_VALUE_SETTER(n);
 }
+/* }}} */
 
 /* {{{ proto void RSA::setE($value, $format = RSA_ENC_HEX) */
 PHP_METHOD(RSA, setE)
 {
 	PHP_RSA_METHOD_VALUE_SETTER(e);
 }
+/* }}} */
 
 /* {{{ proto void RSA::setD($value, $format = RSA_ENC_HEX) */
 PHP_METHOD(RSA, setD)
 {
 	PHP_RSA_METHOD_VALUE_SETTER(d);
 }
+/* }}} */
 
 /* {{{ proto void RSA::setP($value, $format = RSA_ENC_HEX) */
 PHP_METHOD(RSA, setP)
 {
 	PHP_RSA_METHOD_VALUE_SETTER(p);
 }
+/* }}} */
 
 /* {{{ proto void RSA::setQ($value, $format = RSA_ENC_HEX) */
 PHP_METHOD(RSA, setQ)
 {
 	PHP_RSA_METHOD_VALUE_SETTER(q);
 }
+/* }}} */
 
 /*
  * Local variables:
