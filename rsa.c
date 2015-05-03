@@ -136,7 +136,11 @@ PHPC_OBJ_HANDLER_CLONE(rsa)
 {
 	PHPC_OBJ_HANDLER_CLONE_INIT(rsa);
 
-	memcpy(PHPC_THAT->ctx, PHPC_THIS->ctx, sizeof (RSA));
+	PHPC_THAT->ctx->n = BN_dup(PHPC_THIS->ctx->n);
+	PHPC_THAT->ctx->e = BN_dup(PHPC_THIS->ctx->e);
+	PHPC_THAT->ctx->d = BN_dup(PHPC_THIS->ctx->d);
+	PHPC_THAT->ctx->p = BN_dup(PHPC_THIS->ctx->p);
+	PHPC_THAT->ctx->q = BN_dup(PHPC_THIS->ctx->q);
 
 	PHPC_OBJ_HANDLER_CLONE_RETURN();
 }
