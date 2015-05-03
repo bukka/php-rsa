@@ -74,6 +74,11 @@ PHP_METHOD(RSA, setE);
 PHP_METHOD(RSA, setD);
 PHP_METHOD(RSA, setP);
 PHP_METHOD(RSA, setQ);
+PHP_METHOD(RSA, getN);
+PHP_METHOD(RSA, getE);
+PHP_METHOD(RSA, getD);
+PHP_METHOD(RSA, getP);
+PHP_METHOD(RSA, getQ);
 
 #endif	/* PHP_RSA_H */
 

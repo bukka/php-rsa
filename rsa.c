@@ -68,6 +68,9 @@ ZEND_ARG_INFO(0, value)
 ZEND_ARG_INFO(0, encoding)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_rsa_get_value, 0, 0, 0)
+ZEND_ARG_INFO(0, encoding)
+ZEND_END_ARG_INFO()
 
 static const zend_function_entry php_rsa_object_methods[] = {
 	PHP_ME(RSA, __construct,    NULL,                       ZEND_ACC_CTOR|ZEND_ACC_PUBLIC)
@@ -78,6 +81,11 @@ static const zend_function_entry php_rsa_object_methods[] = {
 	PHP_ME(RSA, setD,           arginfo_rsa_set_value,      ZEND_ACC_PUBLIC)
 	PHP_ME(RSA, setP,           arginfo_rsa_set_value,      ZEND_ACC_PUBLIC)
 	PHP_ME(RSA, setQ,           arginfo_rsa_set_value,      ZEND_ACC_PUBLIC)
+	PHP_ME(RSA, getN,           arginfo_rsa_get_value,      ZEND_ACC_PUBLIC)
+	PHP_ME(RSA, getE,           arginfo_rsa_get_value,      ZEND_ACC_PUBLIC)
+	PHP_ME(RSA, getD,           arginfo_rsa_get_value,      ZEND_ACC_PUBLIC)
+	PHP_ME(RSA, getP,           arginfo_rsa_get_value,      ZEND_ACC_PUBLIC)
+	PHP_ME(RSA, getQ,           arginfo_rsa_get_value,      ZEND_ACC_PUBLIC)
 	PHPC_FE_END
 };
 
@@ -247,6 +255,17 @@ static int php_rsa_check_encoding(const char *sval, phpc_str_size_t sval_len,
 /* }}} */
 
 /* {{{ */
+static php_rsa_encoding php_rsa_long_to_encoding(phpc_long_t encoding_value)
+{
+	if (encoding_value == PHP_RSA_ENC_DEC) {
+		return PHP_RSA_ENC_DEC;
+	} else {
+		return PHP_RSA_ENC_HEX;
+	}
+}
+/* }}} */
+
+/* {{{ */
 static int php_rsa_set_value(BIGNUM **bnval, const char *sval, phpc_str_size_t sval_len,
 		php_rsa_encoding encoding TSRMLS_DC)
 {
@@ -270,13 +289,20 @@ static int php_rsa_set_value(BIGNUM **bnval, const char *sval, phpc_str_size_t s
 /* }}} */
 
 /* {{{ */
-static php_rsa_encoding php_rsa_long_to_encoding(phpc_long_t encoding_value)
+static char *php_rsa_get_value(BIGNUM *bnval, php_rsa_encoding encoding TSRMLS_DC)
 {
-	if (encoding_value == PHP_RSA_ENC_DEC) {
-		return PHP_RSA_ENC_DEC;
-	} else {
-		return PHP_RSA_ENC_HEX;
+	char *value;
+
+	switch (encoding) {
+		case PHP_RSA_ENC_DEC:
+			value = BN_bn2dec(bnval);
+			break;
+
+		default:
+			value = BN_bn2hex(bnval);
 	}
+
+	return value;
 }
 /* }}} */
 
@@ -296,6 +322,30 @@ static void php_rsa_set_value_method(INTERNAL_FUNCTION_PARAMETERS, BIGNUM **bnva
 			php_rsa_long_to_encoding(encoding_value) TSRMLS_CC);
 
 	RETURN_NULL();
+}
+/* }}} */
+
+/* {{{ */
+static void php_rsa_get_value_method(INTERNAL_FUNCTION_PARAMETERS, BIGNUM **bnval)
+{
+	PHPC_STR_DECLARE(out);
+	char *value;
+	phpc_long_t encoding_value = PHP_RSA_ENC_HEX;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|l",
+			&encoding_value) == FAILURE) {
+		return;
+	}
+
+	if (!*bnval) {
+		RETURN_EMPTY_STRING();
+	}
+
+	value = php_rsa_get_value(*bnval, php_rsa_long_to_encoding(encoding_value) TSRMLS_CC);
+	PHPC_STR_INIT(out, value, strlen(value));
+	OPENSSL_free(value);
+
+	PHPC_STR_RETURN(out);
 }
 /* }}} */
 
@@ -366,6 +416,46 @@ PHP_METHOD(RSA, setP)
 PHP_METHOD(RSA, setQ)
 {
 	PHP_RSA_METHOD_VALUE_SETTER(q);
+}
+/* }}} */
+
+#define PHP_RSA_METHOD_VALUE_GETTER(name) \
+	PHPC_THIS_DECLARE_AND_FETCH(rsa); \
+	php_rsa_get_value_method(INTERNAL_FUNCTION_PARAM_PASSTHRU, &PHPC_THIS->ctx->name);
+
+/* {{{ proto string RSA::getN($format = RSA_ENC_HEX) */
+PHP_METHOD(RSA, getN)
+{
+	PHP_RSA_METHOD_VALUE_GETTER(n);
+}
+/* }}} */
+
+
+/* {{{ proto string RSA::getE($format = RSA_ENC_HEX) */
+PHP_METHOD(RSA, getE)
+{
+	PHP_RSA_METHOD_VALUE_GETTER(e);
+}
+/* }}} */
+
+/* {{{ proto string RSA::getD($format = RSA_ENC_HEX) */
+PHP_METHOD(RSA, getD)
+{
+	PHP_RSA_METHOD_VALUE_GETTER(d);
+}
+/* }}} */
+
+/* {{{ proto string RSA::getP($format = RSA_ENC_HEX) */
+PHP_METHOD(RSA, getP)
+{
+	PHP_RSA_METHOD_VALUE_GETTER(p);
+}
+/* }}} */
+
+/* {{{ proto string RSA::getQ($format = RSA_ENC_HEX) */
+PHP_METHOD(RSA, getQ)
+{
+	PHP_RSA_METHOD_VALUE_GETTER(q);
 }
 /* }}} */
 
