@@ -150,10 +150,6 @@ PHP_MINIT_FUNCTION(rsa)
 	/* Init OpenSSL algorithms */
 	OpenSSL_add_all_algorithms();
 
-	/* Register encoding constants */
-	REGISTER_LONG_CONSTANT("RSA_ENC_HEX", PHP_RSA_ENC_HEX, CONST_CS | CONST_PERSISTENT);
-	REGISTER_LONG_CONSTANT("RSA_ENC_DEC", PHP_RSA_ENC_DEC, CONST_CS | CONST_PERSISTENT);
-
 	/* RSA class */
 	INIT_CLASS_ENTRY(ce, "RSA", php_rsa_object_methods);
 	PHPC_CLASS_SET_HANDLER_CREATE(ce, rsa);
@@ -162,6 +158,14 @@ PHP_MINIT_FUNCTION(rsa)
 	PHPC_OBJ_SET_HANDLER_OFFSET(rsa);
 	PHPC_OBJ_SET_HANDLER_FREE(rsa);
 	PHPC_OBJ_SET_HANDLER_CLONE(rsa);
+
+	/* Register RSA constant */
+	zend_declare_class_constant_long(php_rsa_ce,
+			"ENCODING_HEX", sizeof("ENCODING_HEX") - 1,
+			PHP_RSA_ENC_HEX TSRMLS_CC);
+	zend_declare_class_constant_long(php_rsa_ce,
+			"ENCODING_DEC", sizeof("ENCODING_DEC") - 1,
+			PHP_RSA_ENC_DEC TSRMLS_CC);
 
 	/* RSAException class */
 	INIT_CLASS_ENTRY(ce, "RSAException", NULL);
