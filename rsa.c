@@ -104,25 +104,23 @@ PHPC_OBJ_DEFINE_HANDLER_VAR(rsa);
 /* {{{ rsa free object handler */
 PHPC_OBJ_HANDLER_FREE(rsa)
 {
-	PHPC_OBJ_STRUCT_DECLARE_AND_FETCH_FROM_ZOBJ(rsa, intern);
-	RSA_free(intern->ctx);
-	PHPC_OBJ_HANDLER_FREE_DTOR(intern);
+	PHPC_OBJ_HANDLER_FREE_INIT(rsa);
+
+	RSA_free(PHPC_THIS->ctx);
+
+	PHPC_OBJ_HANDLER_FREE_DESTROY();
 }
 /* }}} */
 
 /* {{{ rsa create_ex object helper */
 PHPC_OBJ_HANDLER_CREATE_EX(rsa)
 {
-	PHPC_OBJ_HANDLER_CREATE_EX_INIT();
-	PHPC_OBJ_STRUCT_DECLARE(rsa, intern);
-
-	intern = PHPC_OBJ_HANDLER_CREATE_EX_ALLOC(rsa);
-	PHPC_OBJ_HANDLER_INIT_CREATE_EX_PROPS(intern);
+	PHPC_OBJ_HANDLER_CREATE_EX_INIT(rsa);
 
 	/* allocate encode context */
-	intern->ctx = RSA_new();
+	PHPC_THIS->ctx = RSA_new();
 
-	PHPC_OBJ_HANDLER_CREATE_EX_RETURN(rsa, intern);
+	PHPC_OBJ_HANDLER_CREATE_EX_RETURN(rsa);
 }
 /* }}} */
 
@@ -136,16 +134,11 @@ PHPC_OBJ_HANDLER_CREATE(rsa)
 /* {{{ rsa clone object handler */
 PHPC_OBJ_HANDLER_CLONE(rsa)
 {
-	PHPC_OBJ_HANDLER_CLONE_INIT();
-	PHPC_OBJ_STRUCT_DECLARE(rsa, old_obj);
-	PHPC_OBJ_STRUCT_DECLARE(rsa, new_obj);
+	PHPC_OBJ_HANDLER_CLONE_INIT(rsa);
 
-	old_obj = PHPC_OBJ_FROM_SELF(rsa);
-	PHPC_OBJ_HANDLER_CLONE_MEMBERS(rsa, new_obj, old_obj);
+	memcpy(PHPC_THAT->ctx, PHPC_THIS->ctx, sizeof (RSA));
 
-	memcpy(new_obj->ctx, old_obj->ctx, sizeof (RSA));
-
-	PHPC_OBJ_HANDLER_CLONE_RETURN(new_obj);
+	PHPC_OBJ_HANDLER_CLONE_RETURN();
 }
 /* }}} */
 
