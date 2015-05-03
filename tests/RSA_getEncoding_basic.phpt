@@ -8,7 +8,7 @@ if (!extension_loaded('rsa'))
 --FILE--
 <?php
 $rsa = new RSA();
-var_dump($rsa->getEncoding() === RSA_ENC_HEX);
+var_dump($rsa->getEncoding() === RSA::ENCODING_HEX);
 ?>
 --EXPECT--
 bool(true)
