@@ -42,6 +42,7 @@ extern zend_module_entry rsa_module_entry;
 
 /* RSA param encoding */
 typedef enum {
+	PHP_RSA_ENC_AUTO,
 	PHP_RSA_ENC_HEX,
 	PHP_RSA_ENC_DEC
 } php_rsa_encoding;

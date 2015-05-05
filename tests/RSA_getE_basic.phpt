@@ -8,8 +8,8 @@ if (!extension_loaded('rsa'))
 --FILE--
 <?php
 $rsa = new RSA();
-$rsa->setE("10001");
-var_dump($rsa->getE());
+$rsa->setE("0x10001");
+var_dump($rsa->getE(RSA::ENCODING_HEX));
 var_dump($rsa->getE(RSA::ENCODING_DEC));
 ?>
 --EXPECT--

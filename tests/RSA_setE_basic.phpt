@@ -9,13 +9,13 @@ if (!extension_loaded('rsa'))
 <?php
 $rsa = new RSA();
 try {
-    $rsa->setE("1000i");
+    $rsa->setE("1000i", RSA::ENCODING_HEX);
 } catch (RSAException $e) {
     echo $e->getCode() === RSAException::INVALID_HEX_ENCODING ? "INVALID HEX\n" : "BAD CODE\n";
 }
 
 try {
-    $rsa->setE("1000d", RSA::ENCODING_DEC);
+    $rsa->setE("1000d");
 } catch (RSAException $e) {
     echo $e->getCode() === RSAException::INVALID_DEC_ENCODING ? "INVALID DEC\n" : "BAD CODE\n";
 }
