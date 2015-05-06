@@ -29,6 +29,12 @@
 #include <openssl/evp.h>
 #include <openssl/rsa.h>
 
+/*
+ * Such or greater value would be counted forever. Practically
+ * anything higher than 4096 does not make sense already
+ */
+#define PHP_RSA_MAX_MODULE_SIZE (1 << 15)
+
 ZEND_DECLARE_MODULE_GLOBALS(rsa)
 
 /* {{{ rsa_module_entry
@@ -73,7 +79,8 @@ ZEND_ARG_INFO(0, encoding)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO(arginfo_rsa_generate_key, 0)
-ZEND_ARG_INFO(0, encoding)
+ZEND_ARG_INFO(0, bits)
+ZEND_ARG_INFO(0, exponent)
 ZEND_END_ARG_INFO()
 
 static const zend_function_entry php_rsa_object_methods[] = {
@@ -90,12 +97,15 @@ static const zend_function_entry php_rsa_object_methods[] = {
 	PHP_ME(RSA, getD,           arginfo_rsa_get_value,      ZEND_ACC_PUBLIC)
 	PHP_ME(RSA, getP,           arginfo_rsa_get_value,      ZEND_ACC_PUBLIC)
 	PHP_ME(RSA, getQ,           arginfo_rsa_get_value,      ZEND_ACC_PUBLIC)
+	PHP_ME(RSA, generateKey,    arginfo_rsa_generate_key,   ZEND_ACC_PUBLIC)
 	PHPC_FE_END
 };
 
 typedef enum {
 	PHP_RSA_ERROR_INVALID_HEX_ENC,
-	PHP_RSA_ERROR_INVALID_DEC_ENC
+	PHP_RSA_ERROR_INVALID_DEC_ENC,
+	PHP_RSA_ERROR_KEY_GENERATION_BITS_HIGH,
+	PHP_RSA_ERROR_KEY_GENERATION_FAILED
 } php_rsa_error_code;
 
 /* class entries */
@@ -480,6 +490,46 @@ PHP_METHOD(RSA, getQ)
 	PHP_RSA_METHOD_VALUE_GETTER(q);
 }
 /* }}} */
+
+
+/* {{{ proto void RSA::generateKey($bits, $exponent) */
+PHP_METHOD(RSA, generateKey)
+{
+	PHPC_THIS_DECLARE(rsa);
+	BIGNUM *bn_exp = NULL;
+	phpc_str_size_t exponent_len;
+	char *exponent;
+	phpc_long_t bits;
+	phpc_long_t encoding_value = PHP_RSA_ENC_AUTO;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ls",
+			&bits, &exponent, &exponent_len, &encoding_value) == FAILURE) {
+		return;
+	}
+
+	RETVAL_NULL();
+
+	PHPC_THIS_FETCH(rsa);
+
+	if (bits > PHP_RSA_MAX_MODULE_SIZE) {
+		zend_throw_exception(php_rsa_exception_ce,
+				"The number of bits for module size is too high",
+				PHP_RSA_ERROR_KEY_GENERATION_BITS_HIGH TSRMLS_CC);
+		return;
+	}
+
+	php_rsa_set_value(&bn_exp, exponent, exponent_len,
+			php_rsa_long_to_encoding(encoding_value) TSRMLS_CC);
+
+
+	if (!RSA_generate_key_ex(PHPC_THIS->ctx, bits, bn_exp, NULL)) {
+		zend_throw_exception(php_rsa_exception_ce,
+				"The key generation failed",
+				PHP_RSA_ERROR_KEY_GENERATION_FAILED TSRMLS_CC);
+	}
+
+	BN_free(bn_exp);
+}
 
 /*
  * Local variables:

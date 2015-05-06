@@ -80,6 +80,7 @@ PHP_METHOD(RSA, getE);
 PHP_METHOD(RSA, getD);
 PHP_METHOD(RSA, getP);
 PHP_METHOD(RSA, getQ);
+PHP_METHOD(RSA, generateKey);
 
 #endif	/* PHP_RSA_H */
 
