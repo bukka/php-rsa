@@ -179,6 +179,7 @@ PHP_MINIT_FUNCTION(rsa)
 	PHPC_OBJ_SET_HANDLER_CLONE(rsa);
 
 	/* Register RSA constant */
+	/* encoding constants */
 	zend_declare_class_constant_long(php_rsa_ce,
 			"ENCODING_AUTO", sizeof("ENCODING_AUTO") - 1,
 			PHP_RSA_ENC_AUTO TSRMLS_CC);
@@ -188,6 +189,10 @@ PHP_MINIT_FUNCTION(rsa)
 	zend_declare_class_constant_long(php_rsa_ce,
 			"ENCODING_DEC", sizeof("ENCODING_DEC") - 1,
 			PHP_RSA_ENC_DEC TSRMLS_CC);
+	/* max module size */
+	zend_declare_class_constant_long(php_rsa_ce,
+			"MAX_MODULE_SIZE", sizeof("MAX_MODULE_SIZE") - 1,
+			PHP_RSA_MAX_MODULE_SIZE TSRMLS_CC);
 
 	/* RSAException class */
 	INIT_CLASS_ENTRY(ce, "RSAException", NULL);
@@ -195,12 +200,20 @@ PHP_MINIT_FUNCTION(rsa)
 			zend_exception_get_default(TSRMLS_C), NULL);
 
 	/* Register RSAException error constant */
+	/* encoding errors */
 	zend_declare_class_constant_long(php_rsa_exception_ce,
 			"INVALID_HEX_ENCODING", sizeof("INVALID_HEX_ENCODING") - 1,
 			PHP_RSA_ERROR_INVALID_HEX_ENC TSRMLS_CC);
 	zend_declare_class_constant_long(php_rsa_exception_ce,
 			"INVALID_DEC_ENCODING", sizeof("INVALID_DEC_ENCODING") - 1,
 			PHP_RSA_ERROR_INVALID_DEC_ENC TSRMLS_CC);
+	/* generation key errors */
+	zend_declare_class_constant_long(php_rsa_exception_ce,
+			"KEY_GENERATION_BITS_HIGH", sizeof("KEY_GENERATION_BITS_HIGH") - 1,
+			PHP_RSA_ERROR_KEY_GENERATION_BITS_HIGH TSRMLS_CC);
+	zend_declare_class_constant_long(php_rsa_exception_ce,
+			"KEY_GENERATION_FAILED", sizeof("KEY_GENERATION_FAILED") - 1,
+			PHP_RSA_ERROR_KEY_GENERATION_FAILED TSRMLS_CC);
 
 	return SUCCESS;
 }
