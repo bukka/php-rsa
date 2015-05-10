@@ -356,7 +356,7 @@ static void php_rsa_set_value_method(INTERNAL_FUNCTION_PARAMETERS, BIGNUM **bnva
 {
 	char *sval;
 	phpc_str_size_t sval_len;
-	phpc_long_t encoding_value = PHP_RSA_ENC_AUTO;
+	phpc_long_t encoding_value = PHP_RSA_G(encoding);
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|l",
 			&sval, &sval_len, &encoding_value) == FAILURE) {
@@ -375,7 +375,7 @@ static void php_rsa_get_value_method(INTERNAL_FUNCTION_PARAMETERS, BIGNUM **bnva
 {
 	PHPC_STR_DECLARE(out);
 	char *value;
-	phpc_long_t encoding_value = PHP_RSA_ENC_AUTO;
+	phpc_long_t encoding_value = PHP_RSA_G(encoding);
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|l",
 			&encoding_value) == FAILURE) {

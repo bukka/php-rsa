@@ -16,11 +16,12 @@ try {
 
 $rsa->generateKey(1024, 65537);
 
+$rsa->setEncoding(RSA::ENCODING_HEX);
 var_dump($rsa->getE());
 var_dump($rsa->getN());
 
 ?>
 --EXPECTF--
 BITS HIGH
-string(5) "65537"
+string(6) "010001"
 %s
