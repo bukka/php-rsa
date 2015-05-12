@@ -81,6 +81,7 @@ PHP_METHOD(RSA, getD);
 PHP_METHOD(RSA, getP);
 PHP_METHOD(RSA, getQ);
 PHP_METHOD(RSA, generateKey);
+PHP_METHOD(RSA, getSize);
 
 #endif	/* PHP_RSA_H */
 

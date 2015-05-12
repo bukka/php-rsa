@@ -98,6 +98,7 @@ static const zend_function_entry php_rsa_object_methods[] = {
 	PHP_ME(RSA, getP,           arginfo_rsa_get_value,      ZEND_ACC_PUBLIC)
 	PHP_ME(RSA, getQ,           arginfo_rsa_get_value,      ZEND_ACC_PUBLIC)
 	PHP_ME(RSA, generateKey,    arginfo_rsa_generate_key,   ZEND_ACC_PUBLIC)
+	PHP_ME(RSA, getSize,        NULL,                       ZEND_ACC_PUBLIC)
 	PHPC_FE_END
 };
 
@@ -475,7 +476,6 @@ PHP_METHOD(RSA, getN)
 }
 /* }}} */
 
-
 /* {{{ proto string RSA::getE($format = RSA_ENC_HEX) */
 PHP_METHOD(RSA, getE)
 {
@@ -503,7 +503,6 @@ PHP_METHOD(RSA, getQ)
 	PHP_RSA_METHOD_VALUE_GETTER(q);
 }
 /* }}} */
-
 
 /* {{{ proto void RSA::generateKey($bits, $exponent) */
 PHP_METHOD(RSA, generateKey)
@@ -543,6 +542,21 @@ PHP_METHOD(RSA, generateKey)
 
 	BN_free(bn_exp);
 }
+
+/* {{{ proto int RSA::getSize() */
+PHP_METHOD(RSA, getSize)
+{
+	PHPC_THIS_DECLARE(rsa);
+
+	if (zend_parse_parameters_none() == FAILURE) {
+		return;
+	}
+
+	PHPC_THIS_FETCH(rsa);
+
+	RETURN_LONG((phpc_long_t) RSA_size(PHPC_THIS->ctx));
+}
+/* }}} */
 
 /*
  * Local variables:
