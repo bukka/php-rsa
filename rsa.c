@@ -83,6 +83,11 @@ ZEND_ARG_INFO(0, bits)
 ZEND_ARG_INFO(0, exponent)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_rsa_encdec, 0, 0, 1)
+ZEND_ARG_INFO(0, from)
+ZEND_ARG_INFO(0, padding)
+ZEND_END_ARG_INFO()
+
 static const zend_function_entry php_rsa_object_methods[] = {
 	PHP_ME(RSA, __construct,    NULL,                       ZEND_ACC_CTOR|ZEND_ACC_PUBLIC)
 	PHP_ME(RSA, setEncoding,    arginfo_rsa_set_encoding,   ZEND_ACC_PUBLIC)
@@ -99,6 +104,8 @@ static const zend_function_entry php_rsa_object_methods[] = {
 	PHP_ME(RSA, getQ,           arginfo_rsa_get_value,      ZEND_ACC_PUBLIC)
 	PHP_ME(RSA, generateKey,    arginfo_rsa_generate_key,   ZEND_ACC_PUBLIC)
 	PHP_ME(RSA, getSize,        NULL,                       ZEND_ACC_PUBLIC)
+	PHP_ME(RSA, publicEncrypt,  arginfo_rsa_encdec,         ZEND_ACC_PUBLIC)
+	PHP_ME(RSA, privateDecrypt, arginfo_rsa_encdec,         ZEND_ACC_PUBLIC)
 	PHPC_FE_END
 };
 
@@ -106,7 +113,11 @@ typedef enum {
 	PHP_RSA_ERROR_INVALID_HEX_ENC,
 	PHP_RSA_ERROR_INVALID_DEC_ENC,
 	PHP_RSA_ERROR_KEY_GENERATION_BITS_HIGH,
-	PHP_RSA_ERROR_KEY_GENERATION_FAILED
+	PHP_RSA_ERROR_KEY_GENERATION_FAILED,
+	PHP_RSA_ERROR_PUB_ENCRYPT_INPUT_LONG,
+	PHP_RSA_ERROR_PUB_ENCRYPT_FAILED,
+	PHP_RSA_ERROR_PRIV_DECRYPT_INPUT_LONG,
+	PHP_RSA_ERROR_PRIV_DECRYPT_FAILED
 } php_rsa_error_code;
 
 /* class entries */
@@ -194,6 +205,19 @@ PHP_MINIT_FUNCTION(rsa)
 	zend_declare_class_constant_long(php_rsa_ce,
 			"MAX_MODULE_SIZE", sizeof("MAX_MODULE_SIZE") - 1,
 			PHP_RSA_MAX_MODULE_SIZE TSRMLS_CC);
+	/* padding constants */
+	zend_declare_class_constant_long(php_rsa_ce,
+			"PADDING_NONE", sizeof("PADDING_NONE") - 1,
+			RSA_NO_PADDING TSRMLS_CC);
+	zend_declare_class_constant_long(php_rsa_ce,
+			"PADDING_PKCS1", sizeof("PADDING_PKCS1") - 1,
+			RSA_PKCS1_PADDING TSRMLS_CC);
+	zend_declare_class_constant_long(php_rsa_ce,
+			"PADDING_OAEP", sizeof("PADDING_OAEP") - 1,
+			RSA_PKCS1_OAEP_PADDING TSRMLS_CC);
+	zend_declare_class_constant_long(php_rsa_ce,
+			"PADDING_SSLV23", sizeof("PADDING_SSLV23") - 1,
+			RSA_SSLV23_PADDING TSRMLS_CC);
 
 	/* RSAException class */
 	INIT_CLASS_ENTRY(ce, "RSAException", NULL);
@@ -215,6 +239,20 @@ PHP_MINIT_FUNCTION(rsa)
 	zend_declare_class_constant_long(php_rsa_exception_ce,
 			"KEY_GENERATION_FAILED", sizeof("KEY_GENERATION_FAILED") - 1,
 			PHP_RSA_ERROR_KEY_GENERATION_FAILED TSRMLS_CC);
+	/* public encryption */
+	zend_declare_class_constant_long(php_rsa_exception_ce,
+			"PUB_ENCRYPT_INPUT_LONG", sizeof("PUB_ENCRYPT_INPUT_LONG") - 1,
+			PHP_RSA_ERROR_PUB_ENCRYPT_INPUT_LONG TSRMLS_CC);
+	zend_declare_class_constant_long(php_rsa_exception_ce,
+			"PUB_ENCRYPT_FAILED", sizeof("PUB_ENCRYPT_FAILED") - 1,
+			PHP_RSA_ERROR_PUB_ENCRYPT_FAILED TSRMLS_CC);
+	/* private decryption */
+	zend_declare_class_constant_long(php_rsa_exception_ce,
+			"PRIV_DECRYPT_INPUT_LONG", sizeof("PRIV_DECRYPT_INPUT_LONG") - 1,
+			PHP_RSA_ERROR_PRIV_DECRYPT_INPUT_LONG TSRMLS_CC);
+	zend_declare_class_constant_long(php_rsa_exception_ce,
+			"PRIV_DECRYPT_FAILED", sizeof("PRIV_DECRYPT_FAILED") - 1,
+			PHP_RSA_ERROR_PRIV_DECRYPT_FAILED TSRMLS_CC);
 
 	return SUCCESS;
 }
@@ -555,6 +593,118 @@ PHP_METHOD(RSA, getSize)
 	PHPC_THIS_FETCH(rsa);
 
 	RETURN_LONG((phpc_long_t) RSA_size(PHPC_THIS->ctx));
+}
+/* }}} */
+
+/* {{{ */
+static int php_rsa_get_max_padding_len(int rsa_size, int padding)
+{
+	switch (padding) {
+		case RSA_PKCS1_PADDING:
+		case RSA_SSLV23_PADDING:
+			return rsa_size - 12;
+
+		case RSA_PKCS1_OAEP_PADDING:
+			return rsa_size - 42;
+
+		default:
+			return rsa_size;
+	}
+}
+/* }}} */
+
+/* {{{ proto string RSA::publicEncrypt($from, $padding = RSA::PADDING_OEAP) */
+PHP_METHOD(RSA, publicEncrypt)
+{
+	PHPC_THIS_DECLARE(rsa);
+	PHPC_STR_DECLARE(out);
+	char *from;
+	phpc_str_size_t flen;
+	int rsa_size, enc_len;
+	phpc_long_t padding = RSA_PKCS1_OAEP_PADDING;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|l",
+			&from, &flen, &padding) == FAILURE) {
+		return;
+	}
+
+	PHPC_THIS_FETCH(rsa);
+
+	rsa_size = RSA_size(PHPC_THIS->ctx);
+	if (flen > php_rsa_get_max_padding_len(rsa_size, padding)) {
+		zend_throw_exception(php_rsa_exception_ce,
+				"The public encryption input is too long",
+				PHP_RSA_ERROR_PUB_ENCRYPT_INPUT_LONG TSRMLS_CC);
+	}
+
+	PHPC_STR_ALLOC(out, rsa_size);
+
+	enc_len = RSA_public_encrypt(flen,
+			(unsigned char *) from, (unsigned char *) PHPC_STR_VAL(out),
+			PHPC_THIS->ctx, padding);
+
+	if (enc_len < 0) {
+		zend_throw_exception(php_rsa_exception_ce,
+				"The public encryption failed",
+				PHP_RSA_ERROR_PUB_ENCRYPT_FAILED TSRMLS_CC);
+		PHPC_STR_RELEASE(out);
+		RETURN_NULL();
+	}
+
+	if (enc_len < rsa_size) {
+		PHPC_STR_REALLOC(out, enc_len);
+	}
+	PHPC_STR_VAL(out)[enc_len] = '\0';
+
+	PHPC_STR_RETURN(out);
+
+}
+/* }}} */
+
+/* {{{ proto string RSA::privateDecrypt($from, $padding = RSA::PADDING_OEAP) */
+PHP_METHOD(RSA, privateDecrypt)
+{
+	PHPC_THIS_DECLARE(rsa);
+	PHPC_STR_DECLARE(out);
+	char *from;
+	phpc_str_size_t flen;
+	int rsa_size, dec_len;
+	phpc_long_t padding = RSA_PKCS1_OAEP_PADDING;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|l",
+			&from, &flen, &padding) == FAILURE) {
+		return;
+	}
+
+	PHPC_THIS_FETCH(rsa);
+
+	rsa_size = RSA_size(PHPC_THIS->ctx);
+	if (flen > rsa_size) {
+		zend_throw_exception(php_rsa_exception_ce,
+				"The private decryption input is too long",
+				PHP_RSA_ERROR_PRIV_DECRYPT_INPUT_LONG TSRMLS_CC);
+	}
+
+	PHPC_STR_ALLOC(out, rsa_size);
+
+	dec_len = RSA_private_decrypt(flen,
+			(unsigned char *) from, (unsigned char *) PHPC_STR_VAL(out),
+			PHPC_THIS->ctx, padding);
+
+	if (dec_len < 0) {
+		zend_throw_exception(php_rsa_exception_ce,
+				"The private decryption failed",
+				PHP_RSA_ERROR_PRIV_DECRYPT_FAILED TSRMLS_CC);
+		PHPC_STR_RELEASE(out);
+		RETURN_NULL();
+	}
+
+	if (dec_len < rsa_size) {
+		PHPC_STR_REALLOC(out, dec_len);
+	}
+	PHPC_STR_VAL(out)[dec_len] = '\0';
+
+	PHPC_STR_RETURN(out);
 }
 /* }}} */
 
