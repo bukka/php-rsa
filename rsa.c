@@ -97,11 +97,17 @@ static const zend_function_entry php_rsa_object_methods[] = {
 	PHP_ME(RSA, setD,           arginfo_rsa_set_value,      ZEND_ACC_PUBLIC)
 	PHP_ME(RSA, setP,           arginfo_rsa_set_value,      ZEND_ACC_PUBLIC)
 	PHP_ME(RSA, setQ,           arginfo_rsa_set_value,      ZEND_ACC_PUBLIC)
+	PHP_ME(RSA, setDMP1,        arginfo_rsa_set_value,      ZEND_ACC_PUBLIC)
+	PHP_ME(RSA, setDMQ1,        arginfo_rsa_set_value,      ZEND_ACC_PUBLIC)
+	PHP_ME(RSA, setIQMP,        arginfo_rsa_set_value,      ZEND_ACC_PUBLIC)
 	PHP_ME(RSA, getN,           arginfo_rsa_get_value,      ZEND_ACC_PUBLIC)
 	PHP_ME(RSA, getE,           arginfo_rsa_get_value,      ZEND_ACC_PUBLIC)
 	PHP_ME(RSA, getD,           arginfo_rsa_get_value,      ZEND_ACC_PUBLIC)
 	PHP_ME(RSA, getP,           arginfo_rsa_get_value,      ZEND_ACC_PUBLIC)
 	PHP_ME(RSA, getQ,           arginfo_rsa_get_value,      ZEND_ACC_PUBLIC)
+	PHP_ME(RSA, getDMP1,        arginfo_rsa_get_value,      ZEND_ACC_PUBLIC)
+	PHP_ME(RSA, getDMQ1,        arginfo_rsa_get_value,      ZEND_ACC_PUBLIC)
+	PHP_ME(RSA, getIQMP,        arginfo_rsa_get_value,      ZEND_ACC_PUBLIC)
 	PHP_ME(RSA, generateKey,    arginfo_rsa_generate_key,   ZEND_ACC_PUBLIC)
 	PHP_ME(RSA, getSize,        NULL,                       ZEND_ACC_PUBLIC)
 	PHP_ME(RSA, publicEncrypt,  arginfo_rsa_encdec,         ZEND_ACC_PUBLIC)
@@ -503,6 +509,27 @@ PHP_METHOD(RSA, setQ)
 }
 /* }}} */
 
+/* {{{ proto string RSA::setDMP1($value, $format = RSA_ENC_HEX) */
+PHP_METHOD(RSA, setDMP1)
+{
+	PHP_RSA_METHOD_VALUE_SETTER(dmp1);
+}
+/* }}} */
+
+/* {{{ proto string RSA::setDMQ1($value, $format = RSA_ENC_HEX) */
+PHP_METHOD(RSA, setDMQ1)
+{
+	PHP_RSA_METHOD_VALUE_SETTER(dmq1);
+}
+/* }}} */
+
+/* {{{ proto string RSA::setIQMP($value, $format = RSA_ENC_HEX) */
+PHP_METHOD(RSA, setIQMP)
+{
+	PHP_RSA_METHOD_VALUE_SETTER(iqmp);
+}
+/* }}} */
+
 #define PHP_RSA_METHOD_VALUE_GETTER(name) \
 	PHPC_THIS_DECLARE_AND_FETCH(rsa); \
 	php_rsa_get_value_method(INTERNAL_FUNCTION_PARAM_PASSTHRU, &PHPC_THIS->ctx->name);
@@ -539,6 +566,27 @@ PHP_METHOD(RSA, getP)
 PHP_METHOD(RSA, getQ)
 {
 	PHP_RSA_METHOD_VALUE_GETTER(q);
+}
+/* }}} */
+
+/* {{{ proto string RSA::getDMP1($format = RSA_ENC_HEX) */
+PHP_METHOD(RSA, getDMP1)
+{
+	PHP_RSA_METHOD_VALUE_GETTER(dmp1);
+}
+/* }}} */
+
+/* {{{ proto string RSA::getDMQ1($format = RSA_ENC_HEX) */
+PHP_METHOD(RSA, getDMQ1)
+{
+	PHP_RSA_METHOD_VALUE_GETTER(dmq1);
+}
+/* }}} */
+
+/* {{{ proto string RSA::getIQMP($format = RSA_ENC_HEX) */
+PHP_METHOD(RSA, getIQMP)
+{
+	PHP_RSA_METHOD_VALUE_GETTER(iqmp);
 }
 /* }}} */
 
