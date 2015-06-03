@@ -645,7 +645,7 @@ PHP_METHOD(RSA, getSize)
 /* }}} */
 
 /* {{{ */
-static int php_rsa_get_max_padding_len(int rsa_size, int padding)
+static int php_rsa_get_max_input_len(int rsa_size, int padding)
 {
 	switch (padding) {
 		case RSA_PKCS1_PADDING:
@@ -679,10 +679,11 @@ PHP_METHOD(RSA, publicEncrypt)
 	PHPC_THIS_FETCH(rsa);
 
 	rsa_size = RSA_size(PHPC_THIS->ctx);
-	if (flen > php_rsa_get_max_padding_len(rsa_size, padding)) {
+	if (flen > php_rsa_get_max_input_len(rsa_size, padding)) {
 		zend_throw_exception(php_rsa_exception_ce,
 				"The public encryption input is too long",
 				PHP_RSA_ERROR_PUB_ENCRYPT_INPUT_LONG TSRMLS_CC);
+		RETURN_NULL();
 	}
 
 	PHPC_STR_ALLOC(out, rsa_size);
