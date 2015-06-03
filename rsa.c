@@ -116,7 +116,7 @@ static const zend_function_entry php_rsa_object_methods[] = {
 };
 
 typedef enum {
-	PHP_RSA_ERROR_INVALID_HEX_ENC,
+	PHP_RSA_ERROR_INVALID_HEX_ENC = 1,
 	PHP_RSA_ERROR_INVALID_DEC_ENC,
 	PHP_RSA_ERROR_KEY_GENERATION_BITS_HIGH,
 	PHP_RSA_ERROR_KEY_GENERATION_FAILED,
