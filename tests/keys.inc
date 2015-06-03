@@ -105,3 +105,76 @@ function rsa_test_key2() {
 
     return rsa_test_key_create($params, $ctext_ex);
 }
+
+function rsa_test_key3() {
+    $params = array(
+        'n' => "0x" .
+            "00BBF82F090682CE9C2338AC2B9DA871" .
+            "F7368D07EED41043A440D6B6F07454F5" .
+            "1FB8DFBAAF035C02AB61EA48CEEB6FCD" .
+            "4876ED520D60E1EC4619719D8A5B8B80" .
+            "7FAFB8E0A3DFC737723EE6B4B7D93A25" .
+            "84EE6A649D060953748834B245459839" .
+            "4EE0AAB12D7B61A51F527A9A41F6C168" .
+            "7FE2537298CA2A8F5946F8E5FD091DBD" .
+            "CB",
+
+        'e' => "0x11",
+
+        'd' => "0x" .
+            "00A5DAFC5341FAF289C4B988DB30C1CD" .
+            "F83F31251E0668B42784813801579641" .
+            "B29410B3C7998D6BC465745E5C392669" .
+            "D6870DA2C082A939E37FDCB82EC93EDA" .
+            "C97FF3AD5950ACCFBC111C76F1A95294" .
+            "44E56AAF68C56C092CD38DC3BEF5D20A" .
+            "939926ED4F74A13EDDFBE1A1CECC4894" .
+            "AF9428C2B7B8883FE4463A4BC85B1CB3" .
+            "C1",
+
+        'p' => "0x" .
+            "00EECFAE81B1B9B3C908810B10A1B560" .
+            "0199EB9F44AEF4FDA493B81A9E3D84F6" .
+            "32124EF0236E5D1E3B7E28FAE7AA040A" .
+            "2D5B252176459D1F397541BA2A58FB65" .
+            "99",
+
+        'q' => "0x" .
+            "00C97FB1F027F453F6341233EAAAD1D9" .
+            "353F6C42D08866B1D05A0F2035028B9D" .
+            "869840B41666B42E92EA0DA3B43204B5" .
+            "CFCE3352524D0416A5A441E700AF4615" .
+            "03",
+
+        'dmp1' => "0x" .
+            "54494CA63EBA0337E4E24023FCD69A5A" .
+            "EB07DDDC0183A4D0AC9B54B051F2B13E" .
+            "D9490975EAB77414FF59C1F7692E9A2E" .
+            "202B38FC910A474174ADC93C1F67C981",
+
+        'dmq1' => "0x" .
+            "471E0290FF0AF0750351B7F878864CA9" .
+            "61ADBD3A8A7E991C5C0556A94C3146A7" .
+            "F9803F8F6F8AE342E931FD8AE47A220D" .
+            "1B99A495849807FE39F9245A9836DA3D",
+
+        'iqmp' => "0x" .
+            "00B06C4FDABB6301198D265BDBAE9423" .
+            "B380F271F73453885093077FCD39E211" .
+            "9FC98632154F5883B167A967BF402B4E" .
+            "9E2E0F9656E698EA3666EDFB25798039" .
+            "F7",
+    );
+
+    $ctext_ex = "0x" .
+        "b8246b56a6ed5881aeb585d9a25b2ad7" .
+        "90c417e080681bf1ac2bc3deb69d8bce" .
+        "f0c4366fec400af052a72e9b0effb5b3" .
+        "f2f192dbeaca03c12740057113bf1f06" .
+        "69ac22e9f3a7852e3c15d913cab0b886" .
+        "3a95c99294ce8674214954610346f4d4" .
+        "74b26f7c48b42ee68e1f572a1fc4026a" .
+        "c456b4f59f7b621ea1b9d88f64202fb1";
+
+    return rsa_test_key_create($params, $ctext_ex);
+}
