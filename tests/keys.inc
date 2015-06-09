@@ -7,7 +7,7 @@ function rsa_test_key_create($params, $ctext_ex) {
         $rsa->$method($param_value);
     }
 
-    return array($rsa, $ctext_ex);
+    return array($rsa, pack('H*', substr($ctext_ex, 2)));
 }
 
 function rsa_test_key1() {
