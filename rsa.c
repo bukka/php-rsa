@@ -112,6 +112,8 @@ static const zend_function_entry php_rsa_object_methods[] = {
 	PHP_ME(RSA, getSize,        NULL,                       ZEND_ACC_PUBLIC)
 	PHP_ME(RSA, publicEncrypt,  arginfo_rsa_encdec,         ZEND_ACC_PUBLIC)
 	PHP_ME(RSA, privateDecrypt, arginfo_rsa_encdec,         ZEND_ACC_PUBLIC)
+	PHP_ME(RSA, privateEncrypt, arginfo_rsa_encdec,         ZEND_ACC_PUBLIC)
+	PHP_ME(RSA, publicDecrypt,  arginfo_rsa_encdec,         ZEND_ACC_PUBLIC)
 	PHPC_FE_END
 };
 
@@ -123,7 +125,11 @@ typedef enum {
 	PHP_RSA_ERROR_PUB_ENCRYPT_INPUT_LONG,
 	PHP_RSA_ERROR_PUB_ENCRYPT_FAILED,
 	PHP_RSA_ERROR_PRIV_DECRYPT_INPUT_LONG,
-	PHP_RSA_ERROR_PRIV_DECRYPT_FAILED
+	PHP_RSA_ERROR_PRIV_DECRYPT_FAILED,
+	PHP_RSA_ERROR_PRIV_ENCRYPT_INPUT_LONG,
+	PHP_RSA_ERROR_PRIV_ENCRYPT_FAILED,
+	PHP_RSA_ERROR_PUB_DECRYPT_INPUT_LONG,
+	PHP_RSA_ERROR_PUB_DECRYPT_FAILED
 } php_rsa_error_code;
 
 /* class entries */
@@ -259,6 +265,20 @@ PHP_MINIT_FUNCTION(rsa)
 	zend_declare_class_constant_long(php_rsa_exception_ce,
 			"PRIV_DECRYPT_FAILED", sizeof("PRIV_DECRYPT_FAILED") - 1,
 			PHP_RSA_ERROR_PRIV_DECRYPT_FAILED TSRMLS_CC);
+	/* private encryption */
+	zend_declare_class_constant_long(php_rsa_exception_ce,
+			"PRIV_ENCRYPT_INPUT_LONG", sizeof("PRIV_ENCRYPT_INPUT_LONG") - 1,
+			PHP_RSA_ERROR_PRIV_ENCRYPT_INPUT_LONG TSRMLS_CC);
+	zend_declare_class_constant_long(php_rsa_exception_ce,
+			"PRIV_ENCRYPT_FAILED", sizeof("PRIV_ENCRYPT_FAILED") - 1,
+			PHP_RSA_ERROR_PRIV_ENCRYPT_FAILED TSRMLS_CC);
+	/* public decryption */
+	zend_declare_class_constant_long(php_rsa_exception_ce,
+			"PUB_DECRYPT_INPUT_LONG", sizeof("PUB_DECRYPT_INPUT_LONG") - 1,
+			PHP_RSA_ERROR_PRIV_DECRYPT_INPUT_LONG TSRMLS_CC);
+	zend_declare_class_constant_long(php_rsa_exception_ce,
+			"PUB_DECRYPT_FAILED", sizeof("PUB_DECRYPT_FAILED") - 1,
+			PHP_RSA_ERROR_PUB_DECRYPT_FAILED TSRMLS_CC);
 
 	return SUCCESS;
 }
@@ -744,6 +764,102 @@ PHP_METHOD(RSA, privateDecrypt)
 		zend_throw_exception(php_rsa_exception_ce,
 				"The private decryption failed",
 				PHP_RSA_ERROR_PRIV_DECRYPT_FAILED TSRMLS_CC);
+		PHPC_STR_RELEASE(out);
+		RETURN_NULL();
+	}
+
+	if (dec_len < rsa_size) {
+		PHPC_STR_REALLOC(out, dec_len);
+	}
+	PHPC_STR_VAL(out)[dec_len] = '\0';
+
+	PHPC_STR_RETURN(out);
+}
+/* }}} */
+
+/* {{{ proto string RSA::privateEncrypt($from, $padding = RSA::PADDING_PKCS1) */
+PHP_METHOD(RSA, privateEncrypt)
+{
+	PHPC_THIS_DECLARE(rsa);
+	PHPC_STR_DECLARE(out);
+	char *from;
+	phpc_str_size_t flen;
+	int rsa_size, dec_len;
+	phpc_long_t padding = RSA_PKCS1_PADDING;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|l",
+			&from, &flen, &padding) == FAILURE) {
+		return;
+	}
+
+	PHPC_THIS_FETCH(rsa);
+
+	rsa_size = RSA_size(PHPC_THIS->ctx);
+	if (flen > rsa_size) {
+		zend_throw_exception(php_rsa_exception_ce,
+				"The private encryption input is too long",
+				PHP_RSA_ERROR_PRIV_ENCRYPT_INPUT_LONG TSRMLS_CC);
+		RETURN_NULL();
+	}
+
+	PHPC_STR_ALLOC(out, rsa_size);
+
+	dec_len = RSA_private_encrypt(flen,
+			(unsigned char *) from, (unsigned char *) PHPC_STR_VAL(out),
+			PHPC_THIS->ctx, padding);
+
+	if (dec_len < 0) {
+		zend_throw_exception(php_rsa_exception_ce,
+				"The private encryption failed",
+				PHP_RSA_ERROR_PUB_ENCRYPT_FAILED TSRMLS_CC);
+		PHPC_STR_RELEASE(out);
+		RETURN_NULL();
+	}
+
+	if (dec_len < rsa_size) {
+		PHPC_STR_REALLOC(out, dec_len);
+	}
+	PHPC_STR_VAL(out)[dec_len] = '\0';
+
+	PHPC_STR_RETURN(out);
+
+}
+/* }}} */
+
+/* {{{ proto string RSA::publicDecrypt($from, $padding = RSA::PADDING_PKCS1) */
+PHP_METHOD(RSA, publicDecrypt)
+{
+	PHPC_THIS_DECLARE(rsa);
+	PHPC_STR_DECLARE(out);
+	char *from;
+	phpc_str_size_t flen;
+	int rsa_size, dec_len;
+	phpc_long_t padding = RSA_PKCS1_PADDING;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|l",
+			&from, &flen, &padding) == FAILURE) {
+		return;
+	}
+
+	PHPC_THIS_FETCH(rsa);
+
+	rsa_size = RSA_size(PHPC_THIS->ctx);
+	if (flen > rsa_size) {
+		zend_throw_exception(php_rsa_exception_ce,
+				"The public decryption input is too long",
+				PHP_RSA_ERROR_PUB_DECRYPT_INPUT_LONG TSRMLS_CC);
+	}
+
+	PHPC_STR_ALLOC(out, rsa_size);
+
+	dec_len = RSA_public_decrypt(flen,
+			(unsigned char *) from, (unsigned char *) PHPC_STR_VAL(out),
+			PHPC_THIS->ctx, padding);
+
+	if (dec_len < 0) {
+		zend_throw_exception(php_rsa_exception_ce,
+				"The public decryption failed",
+				PHP_RSA_ERROR_PUB_DECRYPT_FAILED TSRMLS_CC);
 		PHPC_STR_RELEASE(out);
 		RETURN_NULL();
 	}

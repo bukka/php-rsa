@@ -90,6 +90,8 @@ PHP_METHOD(RSA, generateKey);
 PHP_METHOD(RSA, getSize);
 PHP_METHOD(RSA, publicEncrypt);
 PHP_METHOD(RSA, privateDecrypt);
+PHP_METHOD(RSA, privateEncrypt);
+PHP_METHOD(RSA, publicDecrypt);
 
 #endif	/* PHP_RSA_H */
 
