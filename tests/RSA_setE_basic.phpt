@@ -3,21 +3,21 @@ RSA::setE basic usage.
 --SKIPIF--
 <?php
 if (!extension_loaded('rsa'))
-    die("Skip: RSA extension not loaded");
+	die("Skip: RSA extension not loaded");
 ?>
 --FILE--
 <?php
 $rsa = new RSA();
 try {
-    $rsa->setE("1000i", RSA::ENCODING_HEX);
+	$rsa->setE("1000i", RSA::ENCODING_HEX);
 } catch (RSAException $e) {
-    echo $e->getCode() === RSAException::INVALID_HEX_ENCODING ? "INVALID HEX\n" : "BAD CODE\n";
+	echo $e->getCode() === RSAException::INVALID_HEX_ENCODING ? "INVALID HEX\n" : "BAD CODE\n";
 }
 
 try {
-    $rsa->setE("1000d");
+	$rsa->setE("1000d");
 } catch (RSAException $e) {
-    echo $e->getCode() === RSAException::INVALID_DEC_ENCODING ? "INVALID DEC\n" : "BAD CODE\n";
+	echo $e->getCode() === RSAException::INVALID_DEC_ENCODING ? "INVALID DEC\n" : "BAD CODE\n";
 }
 
 $rsa->setE("10001");
