@@ -120,6 +120,7 @@ static const zend_function_entry php_rsa_object_methods[] = {
 typedef enum {
 	PHP_RSA_ERROR_INVALID_HEX_ENC = 1,
 	PHP_RSA_ERROR_INVALID_DEC_ENC,
+	PHP_RSA_ERROR_INVALID_PADDING,
 	PHP_RSA_ERROR_KEY_GENERATION_BITS_HIGH,
 	PHP_RSA_ERROR_KEY_GENERATION_FAILED,
 	PHP_RSA_ERROR_PUB_ENCRYPT_INPUT_LONG,
@@ -230,6 +231,9 @@ PHP_MINIT_FUNCTION(rsa)
 	zend_declare_class_constant_long(php_rsa_ce,
 			"PADDING_SSLV23", sizeof("PADDING_SSLV23") - 1,
 			RSA_SSLV23_PADDING TSRMLS_CC);
+	zend_declare_class_constant_long(php_rsa_ce,
+			"PADDING_X931", sizeof("PADDING_X931") - 1,
+			RSA_X931_PADDING TSRMLS_CC);
 
 	/* RSAException class */
 	INIT_CLASS_ENTRY(ce, "RSAException", NULL);
@@ -312,6 +316,38 @@ PHP_MINFO_FUNCTION(rsa)
 	php_info_print_table_row(2, "OpenSSL Library Version", SSLeay_version(SSLEAY_VERSION));
 	php_info_print_table_row(2, "OpenSSL Header Version", OPENSSL_VERSION_TEXT);
 	php_info_print_table_end();
+}
+/* }}} */
+
+/* {{{ */
+static int php_rsa_check_padding(phpc_long_t padding, zend_bool sigver TSRMLS_DC)
+{
+	zend_bool ok;
+
+	switch (padding) {
+		case RSA_PKCS1_PADDING:
+		case RSA_NO_PADDING:
+			ok = 1;
+			break;
+		case RSA_PKCS1_OAEP_PADDING:
+		case RSA_SSLV23_PADDING:
+			ok = !sigver;
+			break;
+		case RSA_X931_PADDING:
+			ok = sigver;
+			break;
+		default:
+			ok = 0;
+	}
+
+	if (ok) {
+		return SUCCESS;
+	}
+
+	zend_throw_exception(php_rsa_exception_ce,
+			"Ivalid padding parameter",
+			PHP_RSA_ERROR_INVALID_PADDING TSRMLS_CC);
+	return FAILURE;
 }
 /* }}} */
 
@@ -696,6 +732,10 @@ PHP_METHOD(RSA, publicEncrypt)
 		return;
 	}
 
+	if (php_rsa_check_padding(padding, 0 TSRMLS_CC) == FAILURE) {
+		return;
+	}
+
 	PHPC_THIS_FETCH(rsa);
 
 	rsa_size = RSA_size(PHPC_THIS->ctx);
@@ -742,6 +782,10 @@ PHP_METHOD(RSA, privateDecrypt)
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|l",
 			&from, &flen, &padding) == FAILURE) {
+		return;
+	}
+
+	if (php_rsa_check_padding(padding, 0 TSRMLS_CC) == FAILURE) {
 		return;
 	}
 
@@ -792,6 +836,10 @@ PHP_METHOD(RSA, privateEncrypt)
 		return;
 	}
 
+	if (php_rsa_check_padding(padding, 1 TSRMLS_CC) == FAILURE) {
+		return;
+	}
+
 	PHPC_THIS_FETCH(rsa);
 
 	rsa_size = RSA_size(PHPC_THIS->ctx);
@@ -838,6 +886,10 @@ PHP_METHOD(RSA, publicDecrypt)
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|l",
 			&from, &flen, &padding) == FAILURE) {
+		return;
+	}
+
+	if (php_rsa_check_padding(padding, 1 TSRMLS_CC) == FAILURE) {
 		return;
 	}
 
