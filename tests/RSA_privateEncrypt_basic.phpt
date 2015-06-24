@@ -1,5 +1,5 @@
 --TEST--
-RSA::publicEncrypt basic usage.
+RSA::privateEncrypt basic usage.
 --SKIPIF--
 <?php
 if (!extension_loaded('rsa'))
