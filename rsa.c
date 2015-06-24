@@ -279,7 +279,7 @@ PHP_MINIT_FUNCTION(rsa)
 	/* public decryption */
 	zend_declare_class_constant_long(php_rsa_exception_ce,
 			"PUB_DECRYPT_INPUT_LONG", sizeof("PUB_DECRYPT_INPUT_LONG") - 1,
-			PHP_RSA_ERROR_PRIV_DECRYPT_INPUT_LONG TSRMLS_CC);
+			PHP_RSA_ERROR_PUB_DECRYPT_INPUT_LONG TSRMLS_CC);
 	zend_declare_class_constant_long(php_rsa_exception_ce,
 			"PUB_DECRYPT_FAILED", sizeof("PUB_DECRYPT_FAILED") - 1,
 			PHP_RSA_ERROR_PUB_DECRYPT_FAILED TSRMLS_CC);
@@ -733,7 +733,7 @@ PHP_METHOD(RSA, publicEncrypt)
 	}
 
 	if (php_rsa_check_padding(padding, 0 TSRMLS_CC) == FAILURE) {
-		return;
+		RETURN_NULL();
 	}
 
 	PHPC_THIS_FETCH(rsa);
@@ -786,7 +786,7 @@ PHP_METHOD(RSA, privateDecrypt)
 	}
 
 	if (php_rsa_check_padding(padding, 0 TSRMLS_CC) == FAILURE) {
-		return;
+		RETURN_NULL();
 	}
 
 	PHPC_THIS_FETCH(rsa);
@@ -796,6 +796,7 @@ PHP_METHOD(RSA, privateDecrypt)
 		zend_throw_exception(php_rsa_exception_ce,
 				"The private decryption input is too long",
 				PHP_RSA_ERROR_PRIV_DECRYPT_INPUT_LONG TSRMLS_CC);
+		RETURN_NULL();
 	}
 
 	PHPC_STR_ALLOC(out, rsa_size);
@@ -837,7 +838,7 @@ PHP_METHOD(RSA, privateEncrypt)
 	}
 
 	if (php_rsa_check_padding(padding, 1 TSRMLS_CC) == FAILURE) {
-		return;
+		RETURN_NULL();
 	}
 
 	PHPC_THIS_FETCH(rsa);
@@ -890,7 +891,7 @@ PHP_METHOD(RSA, publicDecrypt)
 	}
 
 	if (php_rsa_check_padding(padding, 1 TSRMLS_CC) == FAILURE) {
-		return;
+		RETURN_NULL();
 	}
 
 	PHPC_THIS_FETCH(rsa);
@@ -900,6 +901,7 @@ PHP_METHOD(RSA, publicDecrypt)
 		zend_throw_exception(php_rsa_exception_ce,
 				"The public decryption input is too long",
 				PHP_RSA_ERROR_PUB_DECRYPT_INPUT_LONG TSRMLS_CC);
+		RETURN_NULL();
 	}
 
 	PHPC_STR_ALLOC(out, rsa_size);
