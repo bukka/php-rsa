@@ -234,6 +234,25 @@ PHP_MINIT_FUNCTION(rsa)
 	zend_declare_class_constant_long(php_rsa_ce,
 			"PADDING_X931", sizeof("PADDING_X931") - 1,
 			RSA_X931_PADDING TSRMLS_CC);
+	/* NID of the most used algorithms for sign and verify */
+	zend_declare_class_constant_long(php_rsa_ce,
+			"NID_RIPEMD160", sizeof("NID_RIPEMD160") - 1,
+			NID_ripemd160 TSRMLS_CC);
+	zend_declare_class_constant_long(php_rsa_ce,
+			"NID_MD5", sizeof("NID_MD5") - 1,
+			NID_md5 TSRMLS_CC);
+	zend_declare_class_constant_long(php_rsa_ce,
+			"NID_MD5_SHA1", sizeof("NID_MD5_SHA1") - 1,
+			NID_md5_sha1 TSRMLS_CC);
+	zend_declare_class_constant_long(php_rsa_ce,
+			"NID_SHA1", sizeof("NID_SHA1") - 1,
+			NID_sha1 TSRMLS_CC);
+	zend_declare_class_constant_long(php_rsa_ce,
+			"NID_SHA256", sizeof("NID_SHA256") - 1,
+			NID_sha256 TSRMLS_CC);
+	zend_declare_class_constant_long(php_rsa_ce,
+			"NID_SHA512", sizeof("NID_SHA512") - 1,
+			NID_sha512 TSRMLS_CC);
 
 	/* RSAException class */
 	INIT_CLASS_ENTRY(ce, "RSAException", NULL);
