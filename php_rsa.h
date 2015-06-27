@@ -92,6 +92,8 @@ PHP_METHOD(RSA, publicEncrypt);
 PHP_METHOD(RSA, privateDecrypt);
 PHP_METHOD(RSA, privateEncrypt);
 PHP_METHOD(RSA, publicDecrypt);
+PHP_METHOD(RSA, sign);
+PHP_METHOD(RSA, verify);
 
 #endif	/* PHP_RSA_H */
 

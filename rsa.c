@@ -88,6 +88,17 @@ ZEND_ARG_INFO(0, from)
 ZEND_ARG_INFO(0, padding)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_rsa_sign, 0, 0, 1)
+ZEND_ARG_INFO(0, message)
+ZEND_ARG_INFO(0, type)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_rsa_verify, 0, 0, 2)
+ZEND_ARG_INFO(0, message)
+ZEND_ARG_INFO(0, signature)
+ZEND_ARG_INFO(0, type)
+ZEND_END_ARG_INFO()
+
 static const zend_function_entry php_rsa_object_methods[] = {
 	PHP_ME(RSA, __construct,    NULL,                       ZEND_ACC_CTOR|ZEND_ACC_PUBLIC)
 	PHP_ME(RSA, setEncoding,    arginfo_rsa_set_encoding,   ZEND_ACC_PUBLIC)
@@ -114,6 +125,8 @@ static const zend_function_entry php_rsa_object_methods[] = {
 	PHP_ME(RSA, privateDecrypt, arginfo_rsa_encdec,         ZEND_ACC_PUBLIC)
 	PHP_ME(RSA, privateEncrypt, arginfo_rsa_encdec,         ZEND_ACC_PUBLIC)
 	PHP_ME(RSA, publicDecrypt,  arginfo_rsa_encdec,         ZEND_ACC_PUBLIC)
+	PHP_ME(RSA, sign,           arginfo_rsa_sign,           ZEND_ACC_PUBLIC)
+	PHP_ME(RSA, verify,         arginfo_rsa_verify,         ZEND_ACC_PUBLIC)
 	PHPC_FE_END
 };
 
@@ -130,7 +143,8 @@ typedef enum {
 	PHP_RSA_ERROR_PRIV_ENCRYPT_INPUT_LONG,
 	PHP_RSA_ERROR_PRIV_ENCRYPT_FAILED,
 	PHP_RSA_ERROR_PUB_DECRYPT_INPUT_LONG,
-	PHP_RSA_ERROR_PUB_DECRYPT_FAILED
+	PHP_RSA_ERROR_PUB_DECRYPT_FAILED,
+	PHP_RSA_ERROR_SIGN_FAILED
 } php_rsa_error_code;
 
 /* class entries */
@@ -302,6 +316,11 @@ PHP_MINIT_FUNCTION(rsa)
 	zend_declare_class_constant_long(php_rsa_exception_ce,
 			"PUB_DECRYPT_FAILED", sizeof("PUB_DECRYPT_FAILED") - 1,
 			PHP_RSA_ERROR_PUB_DECRYPT_FAILED TSRMLS_CC);
+	/* signing */
+	zend_declare_class_constant_long(php_rsa_exception_ce,
+			"SIGN_FAILED", sizeof("SIGN_FAILED") - 1,
+			PHP_RSA_ERROR_SIGN_FAILED TSRMLS_CC);
+
 
 	return SUCCESS;
 }
@@ -945,6 +964,64 @@ PHP_METHOD(RSA, publicDecrypt)
 	PHPC_STR_RETURN(out);
 }
 /* }}} */
+
+/* {{{ proto string RSA::sign($message, $type = RSA::NID_SHA1) */
+PHP_METHOD(RSA, sign)
+{
+	PHPC_THIS_DECLARE(rsa);
+	PHPC_STR_DECLARE(sig);
+	char *msg;
+	phpc_str_size_t msg_len;
+	phpc_long_t type = NID_sha1;
+	unsigned int sig_len;
+	int rsa_size;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|l",
+			&msg, &msg_len, &type) == FAILURE) {
+		return;
+	}
+
+	PHPC_THIS_FETCH(rsa);
+
+	rsa_size = RSA_size(PHPC_THIS->ctx);
+	PHPC_STR_ALLOC(sig, rsa_size);
+
+	if (!RSA_sign(type, (unsigned char *) msg, msg_len,
+			(unsigned char *) PHPC_STR_VAL(sig), &sig_len, PHPC_THIS->ctx)) {
+		zend_throw_exception(php_rsa_exception_ce,
+				"The signing failed",
+				PHP_RSA_ERROR_SIGN_FAILED TSRMLS_CC);
+		PHPC_STR_RELEASE(sig);
+		RETURN_NULL();
+	}
+
+	if (sig_len < rsa_size) {
+		PHPC_STR_REALLOC(sig, sig_len);
+	}
+	PHPC_STR_VAL(sig)[sig_len] = '\0';
+
+	PHPC_STR_RETURN(sig);
+}
+
+/* {{{ proto string RSA::verify($message, $signature, $type = RSA::NID_SHA1) */
+PHP_METHOD(RSA, verify)
+{
+	PHPC_THIS_DECLARE(rsa);
+	char *msg, *sig;
+	phpc_str_size_t msg_len;
+	phpc_str_size_t sig_len;
+	phpc_long_t type = NID_sha1;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss|l",
+			&msg, &msg_len, &sig, &sig_len, &type) == FAILURE) {
+		return;
+	}
+
+	PHPC_THIS_FETCH(rsa);
+
+	RETURN_BOOL(RSA_verify(type, (unsigned char *) msg, msg_len,
+			(unsigned char *) sig, sig_len, PHPC_THIS->ctx));
+}
 
 /*
  * Local variables:
