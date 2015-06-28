@@ -262,8 +262,14 @@ PHP_MINIT_FUNCTION(rsa)
 			"NID_SHA1", sizeof("NID_SHA1") - 1,
 			NID_sha1 TSRMLS_CC);
 	zend_declare_class_constant_long(php_rsa_ce,
+			"NID_SHA224", sizeof("NID_SHA224") - 1,
+			NID_sha224 TSRMLS_CC);
+	zend_declare_class_constant_long(php_rsa_ce,
 			"NID_SHA256", sizeof("NID_SHA256") - 1,
 			NID_sha256 TSRMLS_CC);
+	zend_declare_class_constant_long(php_rsa_ce,
+			"NID_SHA384", sizeof("NID_SHA384") - 1,
+			NID_sha384 TSRMLS_CC);
 	zend_declare_class_constant_long(php_rsa_ce,
 			"NID_SHA512", sizeof("NID_SHA512") - 1,
 			NID_sha512 TSRMLS_CC);
