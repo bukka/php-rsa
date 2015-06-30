@@ -13,7 +13,7 @@ list($rsa1, $ctext1_ex) = rsa_test_key1();
 list($rsa2, $ctext2_ex) = rsa_test_key2();
 list($rsa3, $ctext3_ex) = rsa_test_key3();
 
-// test exceptions
+// test input exceptions
 try {
 	$rsa1->publicEncrypt(str_repeat('x', 1024));
 } catch (RSAException $e) {
@@ -21,6 +21,13 @@ try {
 }
 
 $ptext_ex = pack("H*" , "54859b342c49ea2a");
+
+// test padding exception
+try {
+	$rsa1->publicEncrypt($ptext_ex, RSA::PADDING_X931);
+} catch (RSAException $e) {
+	echo $e->getCode() === RSAException::INVALID_PADDING ? "INVALID PADDING\n" : "BAD CODE\n";
+}
 
 // key 1 test
 function rsa_test_public_encrypt($i, $rsa, $ptext_ex, $ctext_ex) {
@@ -48,6 +55,7 @@ rsa_test_public_encrypt(3, $rsa3, $ptext_ex, $ctext3_ex);
 ?>
 --EXPECT--
 INPUT LONG
+INVALID PADDING
 KEY 1: PKCS#1 v1.5 encryption ok
 KEY 1: OAEP encryption ok
 KEY 2: PKCS#1 v1.5 encryption ok

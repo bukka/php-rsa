@@ -287,6 +287,10 @@ PHP_MINIT_FUNCTION(rsa)
 	zend_declare_class_constant_long(php_rsa_exception_ce,
 			"INVALID_DEC_ENCODING", sizeof("INVALID_DEC_ENCODING") - 1,
 			PHP_RSA_ERROR_INVALID_DEC_ENC TSRMLS_CC);
+	/* padding error */
+	zend_declare_class_constant_long(php_rsa_exception_ce,
+			"INVALID_PADDING", sizeof("INVALID_PADDING") - 1,
+			PHP_RSA_ERROR_INVALID_PADDING TSRMLS_CC);
 	/* generation key errors */
 	zend_declare_class_constant_long(php_rsa_exception_ce,
 			"KEY_GENERATION_BITS_HIGH", sizeof("KEY_GENERATION_BITS_HIGH") - 1,

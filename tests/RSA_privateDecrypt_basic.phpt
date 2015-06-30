@@ -22,6 +22,13 @@ try {
 
 $ptext_ex = pack("H*" , "54859b342c49ea2a");
 
+// test padding exception
+try {
+	$rsa1->privateDecrypt($ctext1_ex, RSA::PADDING_X931);
+} catch (RSAException $e) {
+	echo $e->getCode() === RSAException::INVALID_PADDING ? "INVALID PADDING\n" : "BAD CODE\n";
+}
+
 // key 1 test
 function rsa_test_public_crypt($i, $rsa, $ptext_ex, $ctext_ex) {
     $ctext1_pkcs1_1_5 = $rsa->publicEncrypt($ptext_ex, RSA::PADDING_PKCS1);
@@ -58,6 +65,7 @@ rsa_test_public_crypt(3, $rsa3, $ptext_ex, $ctext3_ex);
 ?>
 --EXPECT--
 INPUT LONG
+INVALID PADDING
 KEY 1: PKCS#1 v1.5 decryption ok
 KEY 1: OAEP decryption ok
 KEY 2: PKCS#1 v1.5 decryption ok
