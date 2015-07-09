@@ -28,6 +28,7 @@
 
 #include <openssl/evp.h>
 #include <openssl/rsa.h>
+#include <openssl/buffer.h>
 
 /*
  * Such or greater value would be counted forever. Practically
@@ -127,6 +128,7 @@ static const zend_function_entry php_rsa_object_methods[] = {
 	PHP_ME(RSA, publicDecrypt,  arginfo_rsa_encdec,         ZEND_ACC_PUBLIC)
 	PHP_ME(RSA, sign,           arginfo_rsa_sign,           ZEND_ACC_PUBLIC)
 	PHP_ME(RSA, verify,         arginfo_rsa_verify,         ZEND_ACC_PUBLIC)
+	PHP_ME(RSA, export,         NULL,                       ZEND_ACC_PUBLIC)
 	PHPC_FE_END
 };
 
@@ -146,6 +148,7 @@ typedef enum {
 	PHP_RSA_ERROR_PUB_DECRYPT_FAILED,
 	PHP_RSA_ERROR_SIGN_FAILED
 } php_rsa_error_code;
+
 
 /* class entries */
 static zend_class_entry *php_rsa_ce;
@@ -1012,6 +1015,7 @@ PHP_METHOD(RSA, sign)
 
 	PHPC_STR_RETURN(sig);
 }
+/* }}} */
 
 /* {{{ proto string RSA::verify($message, $signature, $type = RSA::NID_SHA1) */
 PHP_METHOD(RSA, verify)
@@ -1032,6 +1036,29 @@ PHP_METHOD(RSA, verify)
 	RETURN_BOOL(RSA_verify(type, (unsigned char *) msg, msg_len,
 			(unsigned char *) sig, sig_len, PHPC_THIS->ctx));
 }
+/* }}} */
+
+/* {{{ proto string RSA::export() */
+PHP_METHOD(RSA, export)
+{
+	BIO *bio_mem;
+	BUF_MEM *bio_buf;
+	PHPC_THIS_DECLARE(rsa);
+
+	if (zend_parse_parameters_none() == FAILURE) {
+		return;
+	}
+
+	PHPC_THIS_FETCH(rsa);
+	bio_mem = BIO_new(BIO_s_mem());
+	RSA_print(bio_mem, PHPC_THIS->ctx, 0);
+	BIO_get_mem_ptr(bio_mem, &bio_buf);
+
+	PHPC_CSTRL_RETVAL(bio_buf->data, bio_buf->length);
+
+	BIO_free(bio_mem);
+}
+/* }}} */
 
 /*
  * Local variables:

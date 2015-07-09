@@ -34,8 +34,11 @@ extern zend_module_entry rsa_module_entry;
 #include "TSRM.h"
 #endif
 
+#include "php.h"
+
 /* Crypto version */
 #define PHP_RSA_VERSION "0.1.0"
+
 
 /* PHP Compatibility layer */
 #include "phpc/phpc.h"
@@ -94,6 +97,7 @@ PHP_METHOD(RSA, privateEncrypt);
 PHP_METHOD(RSA, publicDecrypt);
 PHP_METHOD(RSA, sign);
 PHP_METHOD(RSA, verify);
+PHP_METHOD(RSA, export);
 
 #endif	/* PHP_RSA_H */
 
