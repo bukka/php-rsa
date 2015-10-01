@@ -34,12 +34,12 @@ extension=rsa.so
 
 ## API
 
-## Examples
-
-The examples can be found in [the example directory](examples).
+The API is not documented. There are just tests that can be found in [test directory](tests/).
 
 
-## TODO list
+## Future development
 
-The TODO list can be found [here](TODO.md).
+This extension is finished and there are no plans for improvements except quick fixes.
+
+Please see [lcrypto](https://github.com/bukka/php-lcrypto) that contains RSA and more features.
 
