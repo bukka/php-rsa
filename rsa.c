@@ -911,7 +911,7 @@ PHP_METHOD(RSA, privateEncrypt)
 	if (dec_len < 0) {
 		zend_throw_exception(php_rsa_exception_ce,
 				"The private encryption failed",
-				PHP_RSA_ERROR_PUB_ENCRYPT_FAILED TSRMLS_CC);
+				PHP_RSA_ERROR_PRIV_ENCRYPT_FAILED TSRMLS_CC);
 		PHPC_STR_RELEASE(out);
 		RETURN_NULL();
 	}
